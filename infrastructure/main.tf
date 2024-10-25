@@ -6,6 +6,7 @@ locals {
   bucket_name = "sovwva-aws-cd-html-bucket"
 }
 
+# Check if the bucket already exists
 data "aws_s3_bucket" "existing_bucket" {
   bucket = local.bucket_name
 }
@@ -51,7 +52,7 @@ resource "aws_s3_bucket_object" "html_files" {
   bucket = length(data.aws_s3_bucket.existing_bucket.id) > 0 ? data.aws_s3_bucket.existing_bucket.id : aws_s3_bucket.website_bucket[0].id
   key    = each.key
   source = "html_files/${each.key}"
-  acl    = "public-read"  # Можно оставить, если вы все еще хотите установить ACL для объектов
+  acl    = "public-read"  # Установите это только если вам нужно
 }
 
 output "website_url" {
