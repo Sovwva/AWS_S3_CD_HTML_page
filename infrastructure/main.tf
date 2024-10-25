@@ -3,7 +3,7 @@ provider "aws" {
 }
 
 resource "aws_s3_bucket" "website_bucket" {
-  bucket = "sovwva_aws_cd_html_bucket"
+  bucket = "sovwva-aws-cd-html-bucket"
 
   website {
     index_document = "index.html"
