@@ -6,13 +6,8 @@ provider "aws" {
 resource "aws_s3_bucket" "html_bucket" {
   bucket = "sovwva-aws-cd-html-bucket"
 
-  # Применяется только если бакет не существует
-  acl    = "public-read" # Установи нужные разрешения
-}
-
-# Проверка разрешений на бакет
-data "aws_s3_bucket" "existing_bucket" {
-  bucket = aws_s3_bucket.html_bucket.bucket
+  # Установить политику владения объектом
+  object_ownership = "BucketOwnerEnforced"
 }
 
 # Загружаем HTML файлы в бакет
@@ -22,5 +17,5 @@ resource "aws_s3_bucket_object" "html_files" {
   bucket = aws_s3_bucket.html_bucket.bucket
   key    = each.key
   source = "html_files/${each.key}"
-  acl    = "public-read" # Установи нужные разрешения
+  acl    = "public-read" # Установи нужные разрешения для объектов
 }
