@@ -1,43 +1,60 @@
 provider "aws" {
-  region = "us-west-2"  # Замените на нужный вам регион
+  region = "us-east-1"
+}
+
+locals {
+  bucket_name = "sovwva-aws-cd-html-bucket"
+}
+
+data "aws_s3_bucket" "existing_bucket" {
+  bucket = local.bucket_name
 }
 
 resource "aws_s3_bucket" "website_bucket" {
-  bucket = "sovwva-aws-cd-html-bucket"
-  acl    = "public-read"
-}
+  count = length(data.aws_s3_bucket.existing_bucket.id) > 0 ? 0 : 1
 
-resource "aws_s3_bucket_website_configuration" "website" {
-  bucket = aws_s3_bucket.website_bucket.id
+  bucket = local.bucket_name
 
-  index_document {
-    suffix = "index.html"
-  }
-
-  error_document {
-    key = "error.html"
+  website {
+    index_document = "index.html"
+    error_document = "error.html"
   }
 }
 
-resource "aws_s3_object" "html_files" {
-  bucket = aws_s3_bucket.website_bucket.id
-  key    = "index.html"
-  source = "path/to/index.html"  # Замените на фактический путь к вашему HTML файлу
+resource "aws_s3_bucket_acl" "bucket_acl" {
+  count = length(data.aws_s3_bucket.existing_bucket.id) > 0 ? 0 : 1
+
+  bucket = aws_s3_bucket.website_bucket[0].id
   acl    = "public-read"
 }
 
-resource "aws_s3_object" "error_file" {
-  bucket = aws_s3_bucket.website_bucket.id
-  key    = "error.html"
-  source = "path/to/error.html"  # Замените на фактический путь к вашему HTML файлу
-  acl    = "public-read"
+resource "aws_s3_bucket_policy" "bucket_policy" {
+  count = length(data.aws_s3_bucket.existing_bucket.id) > 0 ? 1 : 0
+
+  bucket = data.aws_s3_bucket.existing_bucket.id
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Effect = "Allow",
+        Principal = "*",
+        Action = "s3:GetObject",
+        Resource = "arn:aws:s3:::${data.aws_s3_bucket.existing_bucket.id}/*"
+      }
+    ]
+  })
 }
 
-# Добавьте другие HTML файлы по мере необходимости
-# Например:
-resource "aws_s3_object" "other_file" {
-  bucket = aws_s3_bucket.website_bucket.id
-  key    = "other_file.html"
-  source = "path/to/other_file.html"  # Замените на фактический путь
-  acl    = "public-read"
+resource "aws_s3_bucket_object" "html_files" {
+  for_each = fileset("html_files", "*.html")
+
+  bucket = length(data.aws_s3_bucket.existing_bucket.id) > 0 ? data.aws_s3_bucket.existing_bucket.id : aws_s3_bucket.website_bucket[0].id
+  key    = each.key
+  source = "html_files/${each.key}"
+  acl    = "public-read"  # Можно оставить, если вы все еще хотите установить ACL для объектов
+}
+
+output "website_url" {
+  value = length(data.aws_s3_bucket.existing_bucket.id) > 0 ? data.aws_s3_bucket.existing_bucket.website_endpoint : aws_s3_bucket.website_bucket[0].website_endpoint
+  description = "URL of the website hosted on S3"
 }
