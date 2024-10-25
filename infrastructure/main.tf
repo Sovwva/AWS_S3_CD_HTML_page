@@ -2,23 +2,23 @@ provider "aws" {
   region = "us-east-1"
 }
 
-data "aws_s3_bucket" "existing_bucket" {
-  bucket = "sovwva-aws-cd-html-bucket"
-}
-
-resource "null_resource" "check_bucket" {
-  count = length(data.aws_s3_bucket.existing_bucket.id) > 0 ? 0 : 1
+locals {
+  bucket_name = "sovwva-aws-cd-html-bucket"
 }
 
 resource "aws_s3_bucket" "website_bucket" {
-  count = length(data.aws_s3_bucket.existing_bucket.id) > 0 ? 0 : 1
+  count = length(data.aws_s3_bucket.existing_bucket) > 0 ? 0 : 1
 
-  bucket = "sovwva-aws-cd-html-bucket"
+  bucket = local.bucket_name
 
   website {
     index_document = "index.html"
     error_document = "error.html"
   }
+}
+
+data "aws_s3_bucket" "existing_bucket" {
+  bucket = local.bucket_name
 }
 
 resource "aws_s3_bucket_policy" "bucket_policy" {
