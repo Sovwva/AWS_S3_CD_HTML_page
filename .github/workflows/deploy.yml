@@ -33,10 +33,17 @@ jobs:
       working-directory: ./infrastructure
       run: terraform init
 
+    - name: Show Terraform plan
+      working-directory: ./infrastructure
+      run: terraform plan
+
     - name: Apply Terraform
       working-directory: ./infrastructure
       run: terraform apply -auto-approve
 
+    - name: List HTML files for S3 sync
+      run: ls -la ./html_files  # Убедитесь, что файлы, которые вы хотите загрузить, находятся здесь
+
     - name: Sync files to S3
       run: |
-        aws s3 sync ./ s3://my-personal-website-bucket --acl public-read
+        aws s3 sync ./html_files s3://my-personal-website-bucket --acl public-read
