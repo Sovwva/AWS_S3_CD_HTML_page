@@ -6,8 +6,12 @@ locals {
   bucket_name = "sovwva-aws-cd-html-bucket"
 }
 
+data "aws_s3_bucket" "existing_bucket" {
+  bucket = local.bucket_name
+}
+
 resource "aws_s3_bucket" "website_bucket" {
-  count = length(data.aws_s3_bucket.existing_bucket) > 0 ? 0 : 1
+  count = length(data.aws_s3_bucket.existing_bucket.id) == 0 ? 1 : 0
 
   bucket = local.bucket_name
 
@@ -15,10 +19,6 @@ resource "aws_s3_bucket" "website_bucket" {
     index_document = "index.html"
     error_document = "error.html"
   }
-}
-
-data "aws_s3_bucket" "existing_bucket" {
-  bucket = local.bucket_name
 }
 
 resource "aws_s3_bucket_policy" "bucket_policy" {
