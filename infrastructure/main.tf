@@ -5,9 +5,6 @@ provider "aws" {
 # Проверка наличия бакета
 resource "aws_s3_bucket" "html_bucket" {
   bucket = "sovwva-aws-cd-html-bucket"
-
-  # Установить политику владения объектом
-  object_ownership = "BucketOwnerEnforced"
 }
 
 # Загружаем HTML файлы в бакет
